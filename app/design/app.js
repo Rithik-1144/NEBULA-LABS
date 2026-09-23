@@ -11,6 +11,10 @@ const workspaceAction = document.querySelector('#workspace-action');
 let snapshot = {products: [], low_stock: [], bills: [], customers: []};
 let activeTab = 'inventory';
 let activeChart = 'stock';
+const customerDialog = document.querySelector('#customer-dialog');
+const customerForm = document.querySelector('#customer-form');
+const customerName = document.querySelector('#customer-name');
+const customerFormStatus = document.querySelector('#customer-form-status');
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[character]));
@@ -36,6 +40,9 @@ function showResult(payload) {
   body.scrollIntoView({behavior: 'smooth', block: 'center'});
 }
 
+let chatUser = 'web-operator';
+let chatSessionId = null;
+
 async function runCommand(command) {
   input.value = command;
   body.innerHTML = '<p class="loading">PROCESSING COMMAND...</p>';
@@ -45,16 +52,123 @@ async function runCommand(command) {
     const response = await fetch('/telegram/message', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: command})
+      body: JSON.stringify({message: command, user_id: chatUser || 'web-operator'})
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.detail || 'The command could not be completed.');
-    showResult(payload);
+    const assistantLine = payload.assistant_reply ? `<p class="agent-chat-bubble"><strong>Assistant:</strong> ${escapeHtml(payload.assistant_reply)}</p>` : '';
+    const memoryLine = payload.session_context && Object.keys(payload.session_context).length ? `<p class="agent-chat-bubble subtle"><strong>Memory:</strong> ${escapeHtml(JSON.stringify(payload.session_context))}</p>` : '';
+    showResult({ ...payload, summary: payload.summary + (payload.assistant_reply ? ` ${payload.assistant_reply}` : '') });
+    const panel = document.getElementById('result-body');
+    if (panel) {
+      panel.innerHTML = `<div class="result-card-content"><strong>${escapeHtml(payload.summary || 'Operation completed.')}</strong>${assistantLine}${memoryLine}<dl>${Object.entries(payload).filter(([key]) => !['summary', 'invoice_pdf', 'assistant_reply'].includes(key)).map(([key, value]) => `<div><dt>${escapeHtml(key.replaceAll('_', ' '))}</dt><dd>${formatValue(value)}</dd></div>`).join('')}</dl></div>`;
+    }
+    await loadChatSessions(chatUser);
   } catch (error) {
     title.textContent = 'Request failed';
     status.textContent = 'ERROR';
     status.className = 'status-badge error';
     body.innerHTML = `<div class="result-card-content"><strong>${escapeHtml(error.message)}</strong><p>Check that the API is running and try again.</p></div>`;
+  }
+}
+
+async function loadChatSessions(userId = chatUser) {
+  const panel = document.getElementById('chat-session-list');
+  if (!panel) return;
+  try {
+    const response = await fetch(`/api/dashboard/chat/sessions?user_id=${encodeURIComponent(userId || 'web-operator')}`);
+    const payload = await response.json();
+    const sessions = payload.sessions || [];
+    if (!sessions.length) {
+      panel.innerHTML = '<div class="chat-empty">No saved sessions yet</div>';
+      chatSessionId = null;
+      return;
+    }
+    if (!chatSessionId || !sessions.some((session) => session.id === chatSessionId)) {
+      chatSessionId = sessions[0].id;
+    }
+    panel.innerHTML = sessions.map((session) => `<button class="chat-session ${session.id === chatSessionId ? 'active' : ''}" data-session-id="${session.id}"><span>${escapeHtml(session.last_message || 'New conversation')}</span><small>Updated ${new Date(session.updated_at || Date.now()).toLocaleString()}</small></button>`).join('');
+    await loadChatHistory(userId, chatSessionId);
+  } catch (error) {
+    panel.innerHTML = `<div class="chat-empty">Unable to load chat history</div>`;
+  }
+}
+
+async function loadChatHistory(userId = chatUser, sessionId = chatSessionId) {
+  const container = document.getElementById('chat-history');
+  if (!container) return;
+  try {
+    const response = await fetch(`/api/dashboard/chat/history?user_id=${encodeURIComponent(userId || 'web-operator')}&session_id=${sessionId || ''}`);
+    const payload = await response.json();
+    const messages = payload.messages || [];
+    if (!messages.length) {
+      container.innerHTML = '<div class="chat-empty">Start the first conversation for this user.</div>';
+      return;
+    }
+    container.innerHTML = messages.map((message) => `<div class="chat-message ${message.role === 'user' ? 'user' : 'assistant'}"><span class="label">${message.role === 'user' ? 'You' : 'Nebula'}</span><p>${escapeHtml(message.content)}</p></div>`).join('');
+    container.scrollTop = container.scrollHeight;
+  } catch (error) {
+    container.innerHTML = '<div class="chat-empty">Unable to load the selected conversation.</div>';
+  }
+}
+
+async function sendChatMessage() {
+  const inputEl = document.getElementById('chat-input');
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  try {
+    const response = await fetch('/api/dashboard/chat/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({user_id: chatUser || 'web-operator', message: text, session_id: chatSessionId})
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || 'Unable to post the message.');
+    inputEl.value = '';
+    chatSessionId = payload.response.conversation_id || chatSessionId;
+    await loadChatSessions(chatUser);
+    await loadChatHistory(chatUser, chatSessionId);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function openCustomerDialog() {
+  if (!customerDialog) return;
+  customerDialog.hidden = false;
+  customerForm?.reset();
+  customerFormStatus.textContent = '';
+  customerName?.focus();
+}
+
+function closeCustomerDialog() {
+  if (customerDialog) customerDialog.hidden = true;
+}
+
+async function saveCustomer(event) {
+  event.preventDefault();
+  const formData = new FormData(customerForm);
+  const name = String(formData.get('name') || '').trim();
+  const phone = String(formData.get('phone') || '').trim();
+  if (!name) return;
+  customerFormStatus.textContent = 'Saving customer...';
+  try {
+    const response = await fetch('/api/dashboard/customers', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, phone: phone || null})
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || 'Customer could not be saved.');
+    closeCustomerDialog();
+    activeTab = 'khata';
+    document.querySelectorAll('.workspace-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === 'khata'));
+    await loadSnapshot();
+    renderWorkspace();
+    showResult({action: 'customer_created', summary: `${payload.name} was added to customer khata.`, ...payload});
+  } catch (error) {
+    customerFormStatus.textContent = error.message;
   }
 }
 
@@ -142,7 +256,43 @@ function renderWorkspace() {
     workspaceTitle.textContent = 'Natural language operations';
     workspaceSearch.placeholder = 'Ask about stock, bills, or khata...';
     workspaceAction.textContent = 'Run request';
-    workspaceBody.innerHTML = `<div class="agent-workspace"><div class="agent-status"><span class="agent-orb">✦</span><div><b>Nebula operations agent</b><small>Connected to inventory, billing, khata, and invoice services.</small></div><span class="live-pill">ONLINE</span></div><div class="agent-suggestions"><button data-agent-command="How much Maggi left?">Check product stock</button><button data-agent-command="Create a draft bill">Create a bill</button><button data-agent-command="Khata balance Anita">Check customer khata</button><button data-agent-command="Receive 5 packets of Maggi at cost 14">Receive stock</button></div><div id="agent-result" class="agent-result"><span class="agent-result-label">AGENT READY</span><b>Choose an operation or type a request above.</b></div><p class="agent-hint">Every request is sent to the live store services.</p></div>`;
+    workspaceBody.innerHTML = `
+      <div class="agent-workspace">
+        <div class="agent-status"><span class="agent-orb">✦</span><div><b>Nebula operations agent</b><small>Ask about stock, bills, invoices, or customer khata in plain language.</small></div><span class="live-pill">ONLINE</span></div>
+        <div class="agent-suggestions"><span class="agent-suggestions-label">Try an action</span><button data-agent-command="How much Maggi left?">Check stock</button><button data-agent-command="Create a draft bill">Start a bill</button><button data-agent-command="Khata balance Anita">Review khata</button><button data-agent-command="Receive 5 packets of Maggi at cost 14">Receive stock</button></div>
+        <div class="assistant-chat-shell">
+          <aside class="chat-sidebar"><div class="chat-sidebar-heading"><b>Conversations</b><small>Saved by operator</small></div>
+            <div class="chat-user-bar">
+              <input id="chat-user-input" value="${escapeHtml(chatUser || 'web-operator')}" aria-label="User id" />
+              <button id="chat-user-load" type="button">Open</button>
+            </div>
+            <div id="chat-session-list" class="chat-session-list"></div>
+          </aside>
+          <div class="chat-main">
+            <div id="chat-history" class="chat-history"></div>
+            <div class="chat-composer">
+              <textarea id="chat-input" placeholder="Ask Nebula anything about today’s store operations..."></textarea>
+              <button id="chat-send" class="chat-send" type="button">Send message ↗</button>
+            </div>
+          </div>
+        </div>
+        <div id="agent-result" class="agent-result"><span class="agent-result-label">AGENT READY</span><b>Choose an operation or type a request above.</b></div>
+        <p class="agent-hint">Every request is sent to the live store services and saved to the user session history.</p>
+      </div>
+    `;
+    loadChatSessions(chatUser);
+    const userInput = document.getElementById('chat-user-input');
+    const userButton = document.getElementById('chat-user-load');
+    const sendButton = document.getElementById('chat-send');
+    if (userButton) userButton.addEventListener('click', () => { chatUser = (userInput ? userInput.value : chatUser).trim() || 'web-operator'; loadChatSessions(chatUser); });
+    if (sendButton) sendButton.addEventListener('click', sendChatMessage);
+    document.getElementById('chat-session-list')?.addEventListener('click', async (event) => {
+      const sessionButton = event.target.closest('[data-session-id]');
+      if (!sessionButton) return;
+      chatSessionId = Number(sessionButton.dataset.sessionId);
+      await loadChatHistory(chatUser, chatSessionId);
+      document.querySelectorAll('.chat-session').forEach((button) => button.classList.toggle('active', Number(button.dataset.sessionId) === chatSessionId));
+    });
   } else if (activeTab === 'inventory') {
     workspaceEyebrow.textContent = 'LIVE INVENTORY';
     workspaceTitle.textContent = `${snapshot.products.length} products in catalogue`;
@@ -203,10 +353,15 @@ async function viewBill(billId) {
 }
 workspaceAction.addEventListener('click', () => {
   if (activeTab === 'agent') return runCommand(workspaceSearch.value.trim() || 'How much Maggi left?');
-  runCommand(activeTab === 'inventory' ? 'Receive 10 packets of Maggi at cost 14' : activeTab === 'billing' ? 'Create a draft bill' : 'Create customer New Customer');
+  if (activeTab === 'khata') return openCustomerDialog();
+  runCommand(activeTab === 'inventory' ? 'Receive 10 packets of Maggi at cost 14' : 'Create a draft bill');
 });
 loadSnapshot();
 loadTelegramStatus();
+
+document.querySelectorAll('[data-open-customer]').forEach((button) => button.addEventListener('click', openCustomerDialog));
+document.querySelectorAll('[data-close-customer]').forEach((button) => button.addEventListener('click', closeCustomerDialog));
+customerForm?.addEventListener('submit', saveCustomer);
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();

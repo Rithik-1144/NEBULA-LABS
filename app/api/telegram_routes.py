@@ -18,5 +18,6 @@ def get_db():
 @router.post('/message')
 def handle_telegram_message(payload: dict, db: Session = Depends(get_db)):
     message = str(payload.get('message', '')).strip()
+    user_id = payload.get('user_id') or payload.get('telegram_user_id') or 'web-user'
     handler = TelegramHandler(db)
-    return handler.process(message)
+    return handler.process(message, user_id=user_id)

@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.agent.agent import NebulaAgent
 from app.database.database import SessionLocal
 from app.database.models import Bill, BillItem, Customer, Product
 from app.services.billing import BillingService
@@ -144,6 +145,46 @@ def create_customer(payload: dict[str, Any], db: Session = Depends(get_db)):
         return {'id': customer.id, 'name': customer.name, 'phone': customer.phone, 'balance': 0}
     except KeyError as error:
         raise HTTPException(status_code=400, detail='Customer name is required.') from error
+
+
+@router.get('/chat/users')
+def chat_users(db: Session = Depends(get_db)):
+    agent = NebulaAgent(db)
+    users = []
+    for user_id in agent.list_users():
+        sessions = agent.get_sessions_for_user(user_id)
+        users.append({'user_id': user_id, 'session_count': len(sessions), 'last_session': sessions[0] if sessions else None})
+    return {'users': users}
+
+
+@router.get('/chat/sessions')
+def chat_sessions(user_id: str = 'web-operator', db: Session = Depends(get_db)):
+    agent = NebulaAgent(db)
+    return {'sessions': agent.get_sessions_for_user(user_id), 'user_id': user_id}
+
+
+@router.get('/chat/history')
+def chat_history(user_id: str = 'web-operator', session_id: int | None = None, db: Session = Depends(get_db)):
+    agent = NebulaAgent(db)
+    session = agent._get_or_create_session(user_id, session_id)
+    messages = agent.get_session_messages(user_id, session.id if session else None)
+    return {'user_id': user_id, 'session_id': session.id if session else None, 'messages': messages, 'sessions': agent.get_sessions_for_user(user_id)}
+
+
+@router.post('/chat/send')
+def chat_send(payload: dict[str, Any], db: Session = Depends(get_db)):
+    user_id = str(payload.get('user_id') or 'web-operator')
+    message = str(payload.get('message', '')).strip()
+    session_id = payload.get('session_id')
+    if not message:
+        raise HTTPException(status_code=400, detail='Message is required.')
+    agent = NebulaAgent(db)
+    response = agent.run(message, user_id=user_id, session_id=session_id)
+    return {
+        'response': response,
+        'messages': agent.get_session_messages(user_id, response.get('conversation_id')),
+        'sessions': agent.get_sessions_for_user(user_id),
+    }
 
 
 @router.get('/bills/{bill_id}/invoice')

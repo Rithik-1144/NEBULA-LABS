@@ -62,14 +62,27 @@ async def _help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def _new(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text('A fresh conversation has been started. Your persistent store settings remain available.')
+    user = update.effective_user
+    if user is None or update.message is None:
+        return
+    db = SessionLocal()
+    try:
+        session_id = TelegramHandler(db).new_session(user.id)
+        await update.message.reply_text(
+            f'Fresh Nebula conversation started (session {session_id}). Your store data remains available.'
+        )
+    finally:
+        db.close()
 
 
 async def _status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    if user is None or update.message is None:
+        return
     db = SessionLocal()
     try:
         handler = TelegramHandler(db)
-        result = handler.process('status')
+        result = handler.process('What can you do?', user_id=user.id)
         await update.message.reply_text(_format_response(result))
     finally:
         db.close()
@@ -94,7 +107,7 @@ async def _message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db = SessionLocal()
     try:
         handler = TelegramHandler(db)
-        result = handler.process(text)
+        result = handler.process(text, user_id=user.id)
         invoice_pdf = result.get('invoice_pdf')
         if invoice_pdf:
             await update.message.reply_document(
