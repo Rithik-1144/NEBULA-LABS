@@ -1,0 +1,62 @@
+:root {
+  --color-ink-950: #10202a;
+  --color-ink-900: #132936;
+  --color-navy-800: #102c3a;
+  --color-navy-700: #183c4d;
+  --color-teal-700: #087f78;
+  --color-teal-100: #dff2ed;
+  --color-coral-700: #b64f3e;
+  --color-coral-500: #de6d52;
+  --color-coral-100: #f9e8e1;
+  --color-amber-700: #9b671f;
+  --color-amber-100: #f8eddb;
+  --color-success: #087f78;
+  --color-warning: #9b671f;
+  --color-danger: #b64f3e;
+  --color-neutral-50: #f7faf9;
+  --color-neutral-100: #f4f7f5;
+  --color-neutral-200: #e8eeee;
+  --color-neutral-300: #dce7e8;
+  --color-neutral-500: #788a92;
+  --color-neutral-700: #405760;
+  --color-neutral-950: #10202a;
+  --font-display: Newsreader, Georgia, serif;
+  --font-body: Manrope, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --text-display: clamp(2.6rem, 5vw, 4.4rem);
+  --text-h1: 2.25rem;
+  --text-h2: 1.25rem;
+  --text-body: .8125rem;
+  --text-caption: .625rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --elevation-flat: none;
+  --elevation-raised: 0 16px 40px rgba(27, 60, 66, .06);
+  --elevation-modal: 0 24px 80px rgba(16, 32, 42, .18);
+}
+
+[data-theme='dark'] {
+  --color-neutral-50: #152a34;
+  --color-neutral-100: #10202a;
+  --color-neutral-200: #29424c;
+  --color-neutral-300: #3a5660;
+  --color-neutral-500: #9bb0b6;
+  --color-neutral-700: #d4e1e1;
+  --color-neutral-950: #f4f8f6;
+  --color-ink-950: #f4f8f6;
+  --color-ink-900: #edf5f2;
+  --color-teal-100: #173f3d;
+  --color-coral-100: #4a2925;
+  --color-amber-100: #49391f;
+  --elevation-raised: 0 16px 40px rgba(0, 0, 0, .2);
+}

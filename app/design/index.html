@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a38">
+  <title>Nebula | Store operations</title>
+  <link rel="stylesheet" href="/ui/assets/tokens.css?v=20260922-premium">
+  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260922-premium">
+  <link rel="stylesheet" href="/ui/assets/overrides.css?v=20260922-premium">
+  <link rel="stylesheet" href="/ui/assets/workspace.css?v=20260922-workspace">
+  <link rel="stylesheet" href="/ui/assets/bill-detail.css?v=20260922-bills">
+  <link rel="stylesheet" href="/ui/assets/agent-workspace.css?v=20260922-agent">
+  <link rel="stylesheet" href="/ui/assets/agent-result.css?v=20260922-agent-result">
+  <link rel="stylesheet" href="/ui/assets/charts.css?v=20260922-charts">
+  <link rel="stylesheet" href="/ui/assets/chart-motion.css?v=20260922-motion">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#top"><span class="brand-mark">N</span><span><b>Nebula</b><small>Retail intelligence</small></span></a>
+      <div class="store-switcher"><span class="store-avatar">SL</span><span><b>Sri Lakshmi</b><small>Supermarket · Coimbatore</small></span><span class="chevron">⌄</span></div>
+      <p class="nav-label">Workspace</p>
+      <nav class="nav-list">
+        <a class="nav-item active" href="#overview"><span class="nav-icon">◈</span>Overview</a>
+        <a class="nav-item" href="#command"><span class="nav-icon">✦</span>Agent command</a>
+        <a class="nav-item" href="#workflows"><span class="nav-icon">▦</span>Workflows</a>
+        <a class="nav-item" href="#activity"><span class="nav-icon">◷</span>Activity</a>
+      </nav>
+      <p class="nav-label secondary-label">System</p>
+      <nav class="nav-list"><a class="nav-item" href="/docs" target="_blank"><span class="nav-icon">⌘</span>API reference<span class="external">↗</span></a></nav>
+      <div class="sidebar-bottom"><div class="online-line"><i></i><span>All systems operational</span></div><small>NEBULA OPS · v0.1.0</small></div>
+    </aside>
+
+    <section class="main-area" id="top">
+      <header class="topbar"><div class="mobile-brand"><span class="brand-mark">N</span><b>Nebula</b></div><div class="topbar-meta"><span class="date-label">TUESDAY, 22 SEPTEMBER 2026</span><span class="topbar-divider"></span><span class="operator"><i></i>Operator session</span><button id="theme-toggle" class="theme-button" type="button" aria-label="Switch to dark theme" aria-pressed="false">◐</button><button class="avatar-button" aria-label="Operator profile">RK</button></div></header>
+      <div class="page-wrap">
+        <section class="intro" id="overview"><div><p class="eyebrow">OPERATIONS OVERVIEW</p><h1>Make every shelf<br><em>count.</em></h1><p class="intro-copy">A calm command center for stock, billing, and customer credit. Nebula keeps the counter moving while every decision stays traceable.</p></div><div class="intro-actions"><span class="last-sync"><i></i>Live data connected</span><a class="primary-link" href="#command">Open command desk <span>↗</span></a></div></section>
+
+        <section class="kpi-grid" aria-label="Store snapshot"><article class="kpi-card feature-card"><div class="kpi-head"><span>Store pulse</span><span class="trend up">+12.4%</span></div><div class="pulse-row"><strong>Healthy</strong><div class="pulse-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><small>Operations are moving normally today</small></article><article class="kpi-card"><div class="kpi-head"><span>Catalog</span><span class="kpi-icon teal">⌁</span></div><strong class="kpi-number">10</strong><small>Products in the local catalogue</small></article><article class="kpi-card"><div class="kpi-head"><span>Open bills</span><span class="kpi-icon coral">▤</span></div><strong class="kpi-number">Drafts</strong><small>Create and finalize from one desk</small></article><article class="kpi-card"><div class="kpi-head"><span>Khata</span><span class="kpi-icon amber">◌</span></div><strong class="kpi-number">Ready</strong><small>Credit and payment tracking online</small></article></section>
+
+        <section class="command-layout" id="command"><div class="command-card"><div class="card-heading"><div><p class="eyebrow coral-text">COMMAND DESK</p><h2>What needs doing?</h2></div><span class="endpoint">/telegram/message</span></div><form id="command-form"><label for="command-input">Natural language command</label><div class="command-input-wrap"><textarea id="command-input" rows="2" placeholder="Try “How much Maggi left?”"></textarea><button type="submit" class="send-button" aria-label="Run command">↗</button></div><div class="form-caption"><span>Same agent, same data, every channel.</span><span class="shortcut"><kbd>Enter</kbd> to run</span></div></form><div class="suggestions"><span>Quick actions</span><button data-command="How much Maggi left?">Check stock <b>→</b></button><button data-command="Create a draft bill">New bill <b>→</b></button><button data-command="Khata balance Anita">View khata <b>→</b></button><button data-command="Create customer Maya 9876543210">Add customer <b>→</b></button></div></div><div class="result-card"><div class="card-heading compact"><div><p class="eyebrow">COMMAND OUTPUT</p><h2 id="result-title">Standing by</h2></div><span id="result-status" class="status-badge">IDLE</span></div><div id="result-body" class="result-body"><div class="result-placeholder"><span>✦</span><p>Your next operation will appear here.</p><small>Results are returned from the live store service.</small></div></div></div></section>
+
+        <section class="workflow-section" id="workflows"><div class="section-title"><div><p class="eyebrow">CORE WORKFLOWS</p><h2>Everything important, close at hand.</h2></div><span class="section-note">Built for the daily counter rhythm</span></div><div class="workflow-grid"><button class="workflow-card inventory-workflow" data-command="How much Maggi left?"><span class="workflow-mark">◒</span><span class="workflow-copy"><b>Inventory intelligence</b><small>Check stock, receive goods, spot low shelves.</small></span><span class="workflow-arrow">↗</span></button><button class="workflow-card billing-workflow" data-command="Create a draft bill"><span class="workflow-mark">▤</span><span class="workflow-copy"><b>Billing & invoices</b><small>Draft, edit, finalize, and send a clean PDF.</small></span><span class="workflow-arrow">↗</span></button><button class="workflow-card khata-workflow" data-command="Khata balance Anita"><span class="workflow-mark">◌</span><span class="workflow-copy"><b>Customer khata</b><small>Track credit, payments, and what is due.</small></span><span class="workflow-arrow">↗</span></button></div></section>
+        <section class="live-workspace" aria-label="Live operations workspace"><div class="workspace-tabs" role="tablist"><button class="workspace-tab active" data-tab="inventory" role="tab">Inventory</button><button class="workspace-tab" data-tab="billing" role="tab">Bills</button><button class="workspace-tab" data-tab="khata" role="tab">Khata</button><button class="workspace-tab" data-tab="agent" role="tab">Agent <span class="live-pill">LIVE</span></button></div><div class="workspace-toolbar"><div><p class="eyebrow" id="workspace-eyebrow">LIVE INVENTORY</p><h2 id="workspace-title">Product catalogue</h2></div><div class="toolbar-actions"><input id="workspace-search" aria-label="Search current workspace" placeholder="Search products..."><button id="workspace-action" class="toolbar-button">Receive stock</button></div></div><div id="workspace-body" class="workspace-body"><p class="loading">LOADING LIVE DATA...</p></div></section>
+
+        <section class="intelligence-section" id="intelligence"><div class="section-title"><div><p class="eyebrow">STORE INTELLIGENCE</p><h2>See the shape of the store.</h2></div><div class="chart-switcher" role="tablist" aria-label="Chart view"><button class="chart-switch active" data-chart="stock" role="tab">Stock health</button><button class="chart-switch" data-chart="payments" role="tab">Bill mix</button><button class="chart-switch" data-chart="credit" role="tab">Credit exposure</button></div></div><div class="chart-grid"><article class="chart-card chart-wide"><div class="chart-card-head"><div><span class="chart-kicker">LIVE DISTRIBUTION</span><h3 id="chart-title">Stock health</h3></div><span class="chart-refresh">FROM DATABASE</span></div><div id="primary-chart" class="primary-chart"><p class="loading">BUILDING VISUAL...</p></div></article><article class="chart-card"><div class="chart-card-head"><div><span class="chart-kicker">OPERATING SIGNAL</span><h3 id="signal-title">Reorder pressure</h3></div><span class="signal-value" id="signal-value">—</span></div><div id="signal-chart" class="signal-chart"></div><p id="signal-copy" class="chart-footnote">Loading live signal...</p></article></div></section>
+
+        <section class="activity-section" id="activity"><div class="section-title"><div><p class="eyebrow">RECENT ACTIVITY</p><h2>Quietly keeping score.</h2></div><span class="activity-count">LIVE FEED</span></div><div class="activity-list"><div class="activity-row"><span class="activity-dot teal-dot"></span><span class="activity-main"><b>Agent command surface</b><small>Natural language operations are ready</small></span><time>NOW</time></div><div class="activity-row"><span class="activity-dot coral-dot"></span><span class="activity-main"><b>PDF invoice export</b><small>Finalized bills can be sent as documents</small></span><time>READY</time></div><div class="activity-row"><span class="activity-dot amber-dot"></span><span class="activity-main"><b>Local database</b><small>SQLite operational store connected</small></span><time>ONLINE</time></div><div class="activity-row" id="telegram-status-row"><span class="activity-dot coral-dot"></span><span class="activity-main"><b>Telegram bridge</b><small id="telegram-status-copy">Checking bot configuration...</small></span><time id="telegram-status-value">CHECKING</time></div></div></section>
+        <section class="coverage-section" id="coverage"><div class="section-title"><div><p class="eyebrow">BACKEND COVERAGE</p><h2>Every capability, accounted for.</h2></div><a class="section-link" href="/ui/assets/design-system.md" target="_blank">View coverage map ↗</a></div><div class="coverage-grid"><article class="coverage-card"><span class="coverage-icon teal-icon">✓</span><div><b>Implemented services</b><small>Inventory, billing, khata, invoice PDF, Telegram, and health are live.</small></div><span class="coverage-state live-state">LIVE</span></article><article class="coverage-card"><span class="coverage-icon amber-icon">!</span><div><b>Backend extensions needed</b><small>Analytics, PPTX decks, payment recording, preferences, and observability APIs are not present yet.</small></div><span class="coverage-state gap-state">GAP</span></article></div></section>
+        <footer><span>NEBULA KNOWLAB STORE AGENT</span><span>Designed for the counter, built for clarity.</span></footer>
+      </div>
+    </section>
+  </main>
+  <script src="/ui/assets/app.js?v=20260922-premium"></script>
+</body>
+</html>
